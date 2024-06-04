@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+  profile  String
+
+  sold_items  auction_item[] @relation("sold_items")
+  owned_items auction_item[] @relation("owned_items")
+
+  calling_auction auction[] @relation("calling_auction") // auction where user sell items
+
+  bidding_auctions auction[] @relation("bidding_auction") // auction where user buy items
+  bid              bid[]
+}
+
+model auction_item {
+  id            String   @id @default(uuid())
+  name          String
+  images        String[]
+  bidding_price Float
+  bidded_price  Float
+
+  // seller 
+  seller_id String
+  seller    user   @relation(name: "sold_items", fields: [seller_id], references: [id])
+
+  // owner
+  owner_id String?
+  owner    user?   @relation(name: "owned_items", fields: [owner_id], references: [id])
+
+  created DateTime @default(now())
+  userId  String
+
+  auction auction[]
+
+  bid bid[]
+}
+
+// Auction block
+enum AUCTION_MODE {
+  PUBLIC
+  PRIVATE
+}
+
+model auction {
+  id String @id @default(uuid())
+
+  auction_item_id String
+  auction_item    auction_item @relation(fields: [auction_item_id], references: [id])
+
+  auction_mode AUCTION_MODE @default(PUBLIC)
+
+  // auction caller
+  caller_user_id String
+  caller_user    user   @relation(name: "calling_auction", fields: [caller_user_id], references: [id])
+
+  // bidding users
+  bidders user[] @relation("bidding_auction")
+
+  created    DateTime @default(now())
+  start_time DateTime
+
+  bid bid[]
+}
+
+model bid {
+  id String @id @default(uuid())
+
+  user_id String
+  user    user   @relation(fields: [user_id], references: [id])
+
+  auction_id String
+  auction    auction @relation(fields: [auction_id], references: [id])
+
+  auction_item    auction_item @relation(fields: [auction_item_id], references: [id])
+  auction_item_id String
+
+  created DateTime @default(now())
+}
