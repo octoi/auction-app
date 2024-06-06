@@ -33,5 +33,17 @@ export class UserController {
       password: string;
       profile: string;
     },
-  ) {}
+  ) {
+    this.userService
+      .registerUser(data as any)
+      .then(async (data) => {
+        return {
+          ...data,
+          token: await this.jwtService.signAsync(data),
+        };
+      })
+      .catch((err) => {
+        throw new UnauthorizedException(err);
+      });
+  }
 }

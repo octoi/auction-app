@@ -4,10 +4,11 @@ import { PrismaService } from 'src/prisma.service';
 import type { user as UserType } from '@prisma/client';
 
 type UserResponseType = {
-  id: string;
+  id?: string;
   email: string;
   name: string;
   profile: string;
+  password?: string;
 };
 
 @Injectable()
